@@ -28,4 +28,8 @@ This is a very naive app... it works best with my style of programming and will 
  - For now, only supports seperate ui.R and server.R Shiny apps... the single `app.R` implementation is not supported.
  - `isolate` and `observe` are not supported yet
  - For now, I don't read in data outside the shinyserver (for example, if I want to pass data in that only needs to be calculated once. Not sure yet what's the best way.
+ - For now it only analyzes the main scripts, if you are SOURCEing files in from other places, it won't work.
  
+ ### Other tips:
+  - Add to your server.R and ui.R TEST items. for example, add one for a data.frame and one for a figure. (ADD CODE). You can keep these commented out or displaying random data... then, when you add a new element, just test them in the test blocks before adding them to the exact place. Saves time.
+  - Check Dean Attali's guide (ADD LINK).
