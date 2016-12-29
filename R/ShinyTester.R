@@ -7,9 +7,9 @@
 #'
 #' For now, it only works where the server and ui files are seperate (ie, it doesn't work for `app.R` yet)
 #'
+#' @param directory the directory or website containing the files for the Shiny App. Defaults to current working directory
 #' @param ui a character vector size 1 containing the name of the UI files. defaults to "ui.R"
 #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
-#' @param directory the directory or website containing the files for the Shiny App. Defaults to current working directory
 #'
 #' @return Returns a dataframe with the matchings b/w ui and server files. Also spawns them in VIEW mode.
 #'
@@ -19,10 +19,10 @@
 #' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyDummyCheck()`
 
 
-ShinyDummyCheck <- function(ui="ui.R",server="server.R", directory=getwd()){
-  library(readr)
+ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
   library(stringr)
-  library(dplyr)
+  library(readr)
+  library(tidyverse)
 
   ## Change Working Directory
   # source("ui.R", chdir = T)
@@ -49,7 +49,7 @@ ShinyDummyCheck <- function(ui="ui.R",server="server.R", directory=getwd()){
   read_file(paste(directory,"/",ui,sep="")) %>% str_split("\r?\n") -> Ui
 
   ## But remove 'outputId' and other garbage
-  Ui[[1]] <-    gsub("outputId *= *|h\\d\\(","",Ui[[1]])
+  Ui[[1]] <-    gsub("outputId *= *|h\\d\\(|[a-zA-Z]+Panel\\(","",Ui[[1]])
 
   ## Now extract just the outputs
   Ui[[1]] %>% as.data.frame() %>%
@@ -89,9 +89,9 @@ ShinyDummyCheck <- function(ui="ui.R",server="server.R", directory=getwd()){
 #' Create a hierarchical network chart that  shows the _ad hoc_ structure of your shiny Server.
 #'
 #'
+#' @param directory the directory or website containing the files for the Shiny App. Defaults to current working directory
 #' @param ui a character vector size 1 containing the name of the UI files. defaults to "ui.R"
 #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
-#' @param directory the directory or website containing the files for the Shiny App
 #'
 #'
 #' @return It returns a very very nice network chart
@@ -100,10 +100,11 @@ ShinyDummyCheck <- function(ui="ui.R",server="server.R", directory=getwd()){
 #'
 #' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyHierarchy()`
 
-ShinyHierarchy <- function(ui="ui.R",server="server.R", directory=getwd()){
-  require(purrr)
-  require(tidyr)
-  require(visNetwork)
+ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
+  library(stringr)
+  library(readr)
+  library(tidyverse)
+  library(visNetwork)
 
   ## Get input again
   a <- read_file(paste(directory,"/",server,sep=""))
