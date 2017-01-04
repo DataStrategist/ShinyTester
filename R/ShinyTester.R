@@ -149,8 +149,11 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
   InputsDF$InputType <- "uiInput"
 
   ## OK! Now grab reactives that are inputs to other Chunks ####
-
-  ReactiveInputs <- InputsDF %>% filter(ChunkType=="reactive") %>% select(ChunkName) %>% unique %>% .$ChunkName
+  ## First find reactive chunks
+  # ReactiveInputs <- InputsDF %>% filter(ChunkType=="reactive") %>% select(ChunkName) %>% unique %>% .$ChunkName ## THIS IS WRONG... IT ONLY TAKES REACTIVES THAT HAVE INPUTS FROM UI ONLY
+  ReactiveInputs <- str_extract_all(Chunks,".+ *\\<\\- *reactive",simplify = T)
+  ReactiveInputs <- ReactiveInputs[ReactiveInputs != ""]
+  ReactiveInputs <- gsub(" *<-.+","",ReactiveInputs)
   ReactiveInputs <- paste(ReactiveInputs,"\\(\\)",sep="")
 
   ReactivesInChunks <- map_df(ReactiveInputs,StringFinder)

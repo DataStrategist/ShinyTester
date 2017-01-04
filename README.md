@@ -32,5 +32,5 @@ This is a very naive app... it works best with my style of programming and will 
  
  ### Other tips:
   - Add to your server.R and ui.R TEST items. for example, add one for a data.frame and one for a figure. (ADD CODE). You can keep these commented out or displaying random data... then, when you add a new element, just test them in the test blocks before adding them to the exact place. Saves time.
-  - Likewise, during testing, if you need to run through the code to debug, you can always simulate inputs by doing this: `inputs <- data.frame(Parameter1="thingie1",Parameter2="thingie2")`
+  - Likewise, during testing, if you need to run through the code to debug, you can always simulate inputs by doing this: `input <- data.frame(Parameter1="thingie1",Parameter2="thingie2")`
   - Check Dean Attali's guide (ADD LINK).
