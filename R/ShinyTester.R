@@ -35,7 +35,7 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
     filter(grepl("\\(\\{",.)) %>%
     filter(!grepl("#.+",.)) %>%
     arrange(.) %>% .$. %>%
-    str_split(" *<- *") %>% as.data.frame %>% t %>% as.data.frame -> SrvDF
+    str_split(" *<- *| *= *") %>% as.data.frame %>% t %>% as.data.frame -> SrvDF
   rownames(SrvDF) <- NULL
   colnames(SrvDF) <- c("Item","SrvCall")
 
@@ -56,17 +56,31 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
     filter(grepl("Output",.)) %>%
     filter(!grepl("#.+",.)) %>%
     arrange(.) %>% .$. %>% as.character %>%
-    str_split('\\("') %>% as.data.frame %>% t %>% as.data.frame -> UiDF
+    str_split('(?<=Output)\\(') %>%
+    as.data.frame %>% t %>% as.data.frame %>%
+    map_df(trimws)-> UiDF
 
   rownames(UiDF ) <- NULL
   colnames(UiDF) <- c("VisualCall","Item")
-  UiDF$Item <- gsub('".+','',UiDF$Item)
+
+  ## add back in "Output"
+
+  ## Trim the stuff after comma (NOTE this assumes the first thingie is the input)
+  UiDF$VisualCall <- gsub(",.+","",UiDF$VisualCall)
+
+  # UiDF$Item <- gsub('".+','',UiDF$Item)
+  UiDF$Item <- gsub('[\\"\\),]','',UiDF$Item)
+  UiDF$Item <- gsub("[\\']",'',UiDF$Item)
   UiDF$Item <- gsub(' +','',UiDF$Item)
+  UiDF$Item <- gsub('[\\"\\,]','',UiDF$Item)
+  UiDF$Item <- gsub("[\\',\\)]",'',UiDF$Item)
   UiDF$VisualCall <- gsub('"|\\)','',UiDF$VisualCall)
   UiDF$VisualCall <- gsub('.+\\(','',UiDF$VisualCall)
   UiDF$VisualCall <- gsub(' +','',UiDF$VisualCall)
 
-  Bof <- full_join(SrvDF,UiDF)
+  ## Join and remove white  space
+  Bof <- full_join(SrvDF,UiDF) %>%
+    map_df(trimws)
 
   ## Conditions Good
   Bof$Status[tolower(gsub("render","",Bof$SrvCall)) ==  tolower(gsub("Output","",Bof$VisualCall))] <- "OK"
@@ -151,31 +165,35 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
   ## OK! Now grab reactives that are inputs to other Chunks ####
   ## First find reactive chunks
   # ReactiveInputs <- InputsDF %>% filter(ChunkType=="reactive") %>% select(ChunkName) %>% unique %>% .$ChunkName ## THIS IS WRONG... IT ONLY TAKES REACTIVES THAT HAVE INPUTS FROM UI ONLY
-  ReactiveInputs <- str_extract_all(Chunks,".+ *\\<\\- *reactive",simplify = T)
-  ReactiveInputs <- ReactiveInputs[ReactiveInputs != ""]
-  ReactiveInputs <- gsub(" *<-.+","",ReactiveInputs)
-  ReactiveInputs <- paste(ReactiveInputs,"\\(\\)",sep="")
+  if (length(grep("eactive",Chunks))>0){
+    ReactiveInputs <- str_extract_all(Chunks,".+ *\\<\\- *reactive",simplify = T)
+    ReactiveInputs <- ReactiveInputs[ReactiveInputs != ""]
+    ReactiveInputs <- gsub(" *<-.+","",ReactiveInputs)
+    ReactiveInputs <- paste(ReactiveInputs,"\\(\\)",sep="")
 
-  ReactivesInChunks <- map_df(ReactiveInputs,StringFinder)
+    ReactivesInChunks <- map_df(ReactiveInputs,StringFinder)
 
-  ## Now add in the chunk name
-  ReactivesInChunks$name <- gsub("\\(.+","",Chunks)
+    ## Now add in the chunk name
+    ReactivesInChunks$name <- gsub("\\(.+","",Chunks)
 
-  ## And remove blanks
-  ReactivesDF <- ReactivesInChunks %>%
-    filter(V1 != "")
+    ## And remove blanks
+    ReactivesDF <- ReactivesInChunks %>%
+      filter(V1 != "")
 
-  ## And split up name
-  ReactivesDF <- ReactivesDF %>%
-    separate(name,c("ChunkName","ChunkType"),sep = "  *\\<\\- *")
+    ## And split up name
+    ReactivesDF <- ReactivesDF %>%
+      separate(name,c("ChunkName","ChunkType"),sep = "  *\\<\\- *")
 
-  ## Now clean up df
-  ReactivesDF$V1 <- gsub("\\(","",ReactivesDF$V1)
-  names(ReactivesDF)[1] <- "Input"
-  ReactivesDF$InputType <- "reactive"
+    ## Now clean up df
+    ReactivesDF$V1 <- gsub("\\(","",ReactivesDF$V1)
+    names(ReactivesDF)[1] <- "Input"
+    ReactivesDF$InputType <- "reactive"
 
-  ## And create final df
-  BofDF <- bind_rows(InputsDF,ReactivesDF)
+    ## And create final df
+    BofDF <- bind_rows(InputsDF,ReactivesDF)
+  } else {
+    BofDF <- InputsDF
+  }
 
   ## Now start processing data for a network chart ####
 
