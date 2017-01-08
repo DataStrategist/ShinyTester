@@ -22,7 +22,31 @@ These two thoughts culminated in two functions that analyze the code itself (I g
 It is my hope that both of these combined minimize the intrinsic boneheadedness in us all. This is really quite alpha though... please do check the Caveats!
 
 ### Examples for `ShinyDummyCheck`:
-To do
+
+```
+ShinyTester::ShinyDummyCheck("https://raw.githubusercontent.com/mexindian/ShinyServer/master/LineSelector")
+```
+
+Provides this table:
+
+|Item              |SrvCall         |isOutput |VisualCall         |Status          |
+|:-----------------|:---------------|:--------|:------------------|:---------------|
+|a                 |reactive        |NA       |NA                 |OK              |
+|FinalDF           |reactive        |NA       |NA                 |OK              |
+|Plot3             |renderPlotly    |Yes      |NA                 |Need call in UI |
+|PERC              |renderText      |Yes      |verbatimTextOutput |OK              |
+|fig1              |renderPlot      |Yes      |plotOutput         |OK              |
+|figControl        |renderPlot      |Yes      |plotOutput         |OK              |
+|figControl        |renderPlot      |Yes      |plotOutput         |OK              |
+|table1            |renderDataTable |Yes      |dataTableOutput    |OK              |
+|Plot3height=600px |NA              |NA       |plotlyOutput       |NA              |
+
+Which shows that there are some errors in the Shiny app. The structure of the table is as follows:
+- Item - The name of the asset that maybe should be on both server.R and ui.R
+- SrvCall - the TYPE of object that you're saying this specific item is (in server.R)
+- isOutput  - is a binary that will specify if in server.R you wrote just `item` or `output$item`
+- VisualCall - is the TYPE of thingie you're trying to push the item into (in ui.R). 
+- Status - Compares the SrvCall to the VisualCall, also looks at isOutput and then applies some rules to figure out if it's probably ok or not. In the example above, I'm generating an object `Plot3` in the SrvCall, but then I'm not showing it in the UI. So this is probably not intended behavior. 
 
 ### Examples for `ShinyHierarchy`:
 
