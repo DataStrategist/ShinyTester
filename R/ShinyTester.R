@@ -127,7 +127,7 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
   Chunks <- str_extract_all(b, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
                             simplify = F) %>% .[[1]]
   if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
-                              you're using '=' or '->' assignments, then that would be why.")
+                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
 
   ## Define function that looks for some text into the Chunks
   StringFinder <- function(stringToFind){
@@ -142,7 +142,7 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
   InputsinChunks <- StringFinder("input.[a-zA-Z]+")
 
   if (length(InputsinChunks)==0) stop("Hrm, I can't detect any inputs. I expect assignments to use '<-'... so if
-                              you're using '=' or '->' assignments, then that would be why.")
+                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
 
 
   ## Get inputs read into each chunk
