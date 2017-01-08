@@ -46,7 +46,7 @@ Which shows that there are some errors in the Shiny app. The structure of the ta
 - SrvCall - the TYPE of object that you're saying this specific item is (in server.R)
 - isOutput  - is a binary that will specify if in server.R you wrote just `item` or `output$item`
 - VisualCall - is the TYPE of thingie you're trying to push the item into (in ui.R). 
-- Status - Compares the SrvCall to the VisualCall, also looks at isOutput and then applies some rules to figure out if it's probably ok or not. In the example above, I'm generating an object `Plot3` in the SrvCall, but then I'm not showing it in the UI. So this is probably not intended behavior. 
+- Status - Compares the SrvCall to the VisualCall, also looks at isOutput and then applies some rules to figure out if it's probably ok or not. In the example above, I'm generating an object `Plot3` in the SrvCall, but then I'm not showing it in the UI. So this is probably not intended behavior (can you spot where the problem was?). 
 
 ### Examples for `ShinyHierarchy`:
 
