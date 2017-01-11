@@ -83,10 +83,13 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
 
   ## add back in "Output"
 
-  ## Trim the stuff after comma (NOTE this assumes the first thingie is the input)
-  UiDF$VisualCall <- gsub(",.+","",UiDF$VisualCall)
+  ## Trim the stuff before or after comma
+  UiDF$VisualCall <- gsub(".*?([a-zA-Z\\._]+Output).*?","\\1",UiDF$VisualCall)
 
-  # UiDF$Item <- gsub('".+','',UiDF$Item)
+
+
+  ## Do additional cleaning
+  UiDF$Item <- gsub(',.+','',UiDF$Item) ## DELETE EVERYTHING AFTER FIRST PARAMETER
   UiDF$Item <- gsub('[\\"\\),]','',UiDF$Item)
   UiDF$Item <- gsub("[\\']",'',UiDF$Item)
   UiDF$Item <- gsub(' +','',UiDF$Item)
