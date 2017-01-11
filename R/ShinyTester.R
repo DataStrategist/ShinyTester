@@ -11,7 +11,25 @@
 #' @param ui a character vector size 1 containing the name of the UI files. defaults to "ui.R"
 #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
 #'
-#' @return Returns a dataframe with the matchings b/w ui and server files. Also spawns them in VIEW mode.
+#' @return
+#' Returns a dataframe with the matchings b/w ui and server files. Also spawns them in VIEW mode.
+#' The structure of the table is as follows:
+#' - Item - The name of the asset that maybe should be on both server.R and ui.R
+#' - SrvCall - the TYPE of object that you're saying this specific item is (in server.R)
+#' - isOutput  - is a binary that will specify if in server.R you wrote just `item` or `output$item`
+#' - VisualCall - is the TYPE of thingie you're trying to push the item into (in ui.R).
+#' - Status - Compares the SrvCall to the VisualCall, also looks at isOutput and then applies some rules to figure out if it's probably ok or not.
+#'
+#' The Status types that are currently being checked for are:
+#' The conditions being checked are:
+#' It's OK if:
+#' - the server calls `render(.)` and the ui calls `Output(.)` (where . is the same Item). I also make exceptions for print==text and textoutput==verbatimtextoutput
+#' - If the server calls a reactive block, the ui should not have that Item name
+#'
+#' It's NOT ok if:
+#' - the server is calling a non-reactive and the UI doesn't have it. (this causes false positive errors for things like `observe` etc...)
+#' - the server is calling a reactive block and there IS something showing up on the ui
+#' - you are trying to show a non-reactive block in the ui, but forgot to put `Output$` before the item name in the server
 #'
 #' @examples
 #' ShinyDummyCheck(directory = "https://raw.githubusercontent.com/mexindian/ShinyServer/master/LineSelector")
@@ -89,7 +107,7 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
                (Bof$VisualCall=="textOutput"|Bof$VisualCall=="verbatimTextOutput")] <- "OK"
 
   ## Conditions Bad
-  Bof$Status[Bof$SrvCall != "reactive" & is.na(Bof$VisualCall)] <- "Need call in UI"
+  Bof$Status[grepl("render",Bof$SrvCall) & is.na(Bof$VisualCall)] <- "Need call in UI"
   Bof$Status[Bof$SrvCall == "reactive" & !is.na(Bof$VisualCall)] <- "Reactives don't go in UI... use 'render'somethin"
   Bof$Status[grepl("render",Bof$SrvCall) & is.na(Bof$isOutput)] <- "Put 'Output' before name in server.R definition"
 
@@ -106,15 +124,22 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
 #' @param directory the directory or website containing the files for the Shiny App. Defaults to current working directory
 #' @param ui a character vector size 1 containing the name of the UI files. defaults to "ui.R"
 #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
+#' @param offsetReactives a boolean that specifies if the middle row (the reactives) should show up in one row or whether there
+#' should be a small offset. TRUE by default.
 #'
 #'
-#' @return It returns a very very nice network chart
+#' @return
+#' It returns a very very nice network chart with BASICALLY three-ish ROWS of nodes.
+#' The first one is the UI Inputs, the middle row(s) are the reactives, and the last row are the outputs
+#' being visualized. The hesitation for the second row (the reactives) is because I have introduced a small offset
+#'  to each node in the middle row in order to see reactive flows into each other (if they are all in the same row,
+#'  you can't really see them). You can avoid this behavior by setting the parameter offsetReactives = F.
 #' @examples
 #' ShinyHierarchy(directory = "https://raw.githubusercontent.com/mexindian/ShinyServer/master/LineSelector")
 #'
 #' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyHierarchy()`
 
-ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
+ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
   library(stringr)
   library(readr)
   library(tidyverse)
@@ -216,7 +241,11 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R"){
   ## therefore add small small noise to layer 2 to bettter see dependencies
 
   nodes$level=1
-  nodes$level[nodes$group=="reactive"] <- 2 + runif(sum(nodes$group=="reactive"),min = -.5,max = .5)
+  if (offsetReactives==T){
+    nodes$level[nodes$group=="reactive"] <- 2 + runif(sum(nodes$group=="reactive"),min = -.5,max = .5)
+  } else {
+    nodes$level[nodes$group=="reactive"] <- 2
+  }
   nodes$level[grep("render",nodes$group)] <- 3
 
   ## Now edges
