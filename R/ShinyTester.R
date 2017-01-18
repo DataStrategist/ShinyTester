@@ -119,6 +119,27 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
 }
 
 
+#' ChunkGetter
+#'
+#' Internal function that parses a server file and identifies all the little Shiny mini-functions
+#'
+#' @param x object to parse
+#'
+#' @return character vector where each little mini-function is an item
+
+
+ChunkGetter <- function(x){
+  ## Identify code chunks, basically each little shiny minifunction
+  library(stringr)
+  Chunks <- str_extract_all(x, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
+                            simplify = F) %>% .[[1]]
+  if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
+                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
+  Chunks
+}
+
+
+
 #' ShinyHierarchy
 #'
 #' Create a hierarchical network chart that  shows the _ad hoc_ structure of your shiny Server.
@@ -143,19 +164,15 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
 #' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyHierarchy()`
 
 ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
-  library(stringr)
-  library(readr)
   library(tidyverse)
   library(visNetwork)
+  library(readr)
 
   ## Get input again
   a <- read_file(paste(directory,"/",server,sep=""))
   b <- gsub("\r?\n","",a)
-  ## Identify code chunks, basically each little shiny minifunction
-  Chunks <- str_extract_all(b, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
-                            simplify = F) %>% .[[1]]
-  if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
-                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
+  ## Get chunks
+  Chunks <- ChunkGetter(b)
 
   ## Define function that looks for some text into the Chunks
   StringFinder <- function(stringToFind){
@@ -260,3 +277,25 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
 
 }
 
+
+
+ShinyDryRun <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
+  library(tidyverse)
+  library(visNetwork)
+  library(readr)
+
+  ## Get input again
+  a <- read_file(paste(directory,"/",server,sep=""))
+  b <- gsub("\r?\n","",a)
+  ## Get chunks
+  Chunks <- ChunkGetter(b)
+
+  ## Now identify reactives
+  Chunks <- grep("reactive\\(\\{",Chunks,value=T)
+
+  ## And get rid of the name and other garbage, leaving just the guts.
+  Chunks <- gsub("\\}\\)|.+\\(\\{","",Chunks)
+
+  ## and evaluate each one
+  eval(parse(text = Chunks))
+  }
