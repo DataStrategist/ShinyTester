@@ -256,7 +256,8 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
                       from=nodes$id[match(x = BofDF$Input,table = nodes$Thingie)])
 
   visNetwork(nodes,edges) %>% visEdges(arrows = 'to') %>%
-    visLegend() %>% visHierarchicalLayout()
+    visLegend() %>% visHierarchicalLayout()  %>%
+    visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
 
 }
 
