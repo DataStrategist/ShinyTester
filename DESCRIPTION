@@ -9,7 +9,7 @@ Description: It's my experience that working with Shiny is intuitive once you're
     predictable, and therefore we can control for these. The functions in this
     package help match up the assets listed in the UI and the SERVER files, and
     Visualize the ad hoc structure of the Shiny App.
-License: What license is it under?
+License: GPL-2
 Imports: 
   dplyr,
   purrr,
