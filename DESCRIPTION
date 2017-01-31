@@ -4,7 +4,19 @@ Title: Functions to minimize bonehead moves while working with Shiny
 Version: 0.1.0
 Author: Amit Kohli
 Maintainer: Amit Kohli <amit@amitkohli.com>
-Description: It's my experience that working with Shiny is intuitive once you're into it, but can be quite daunting at first. Several common mistakes are fairly predictable, and therefore we can control for these. The functions in this package help match up the assets listed in the UI and the SERVER files, and Visualize the ad hoc structure of the Shiny App.
-License: What license is it under?
+Description: It's my experience that working with Shiny is intuitive once you're
+    into it, but can be quite daunting at first. Several common mistakes are fairly
+    predictable, and therefore we can control for these. The functions in this
+    package help match up the assets listed in the UI and the SERVER files, and
+    Visualize the ad hoc structure of the Shiny App.
+License: GPL-2
+Imports: 
+  dplyr,
+  purrr,
+  readr,
+  stringr,
+  tidyr,
+  visNetwork
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 5.0.1
