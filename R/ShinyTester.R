@@ -1,3 +1,12 @@
+# this solve:
+# ShinyHierarchy: no visible binding for global variable 'name'
+# Undefined global functions or variables:
+#  . V1 name
+. <- V1 <- name <- NULL
+# but you need to avoid:
+# - use . in the functions.
+# - use nonstandar evaluation (V1, name), you need
+# to use the standar evaluation alternatives like mutate_ separete_ etc_ :P
 
 
 #' ShinyDummyCheck
@@ -32,15 +41,16 @@
 #' - you are trying to show a non-reactive block in the ui, but forgot to put `Output$` before the item name in the server
 #'
 #' @examples
-#' ShinyDummyCheck(directory = "https://raw.githubusercontent.com/mexindian/ShinyServer/master/LineSelector")
+#' ShinyDummyCheck(directory = system.file("example", package = "ShinyTester"))
 #'
-#' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyDummyCheck()`
-
-
-ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
-  library(stringr)
-  library(readr)
-  library(tidyverse)
+#' @details You can test with your own app, go to your shiny app, make that your
+#'  working directory, and then type `ShinyDummyCheck()`
+#' @importFrom stringr str_split
+#' @importFrom readr read_file
+#' @importFrom purrr map_df
+#' @importFrom dplyr filter arrange full_join
+#' @export
+ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 
   ## Change Working Directory
   # source("ui.R", chdir = T)
@@ -104,6 +114,7 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
     map_df(trimws)
 
   ## Conditions Good
+  Bof$Status <- ""
   Bof$Status[tolower(gsub("render","",Bof$SrvCall)) ==  tolower(gsub("Output","",Bof$VisualCall))] <- "OK"
   Bof$Status[Bof$SrvCall == "reactive" & is.na(Bof$VisualCall)] <- "OK"
   Bof$Status[Bof$SrvCall == "renderPrint" | Bof$SrvCall == "renderText" &
@@ -114,7 +125,7 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
   Bof$Status[Bof$SrvCall == "reactive" & !is.na(Bof$VisualCall)] <- "Reactives don't go in UI... use 'render'somethin"
   Bof$Status[grepl("render",Bof$SrvCall) & is.na(Bof$isOutput)] <- "Put 'Output' before name in server.R definition"
 
-  Bof %>% View
+  # Bof %>% View
   Bof
 }
 
@@ -138,15 +149,19 @@ ShinyDummyCheck <- function(directory=getwd(),ui="ui.R",server="server.R"){
 #'  to each node in the middle row in order to see reactive flows into each other (if they are all in the same row,
 #'  you can't really see them). You can avoid this behavior by setting the parameter offsetReactives = F.
 #' @examples
-#' ShinyHierarchy(directory = "https://raw.githubusercontent.com/mexindian/ShinyServer/master/LineSelector")
+#' ShinyHierarchy(system.file("example", package = "ShinyTester"))
 #'
-#' ## Or, to test with your own app, go to your shiny app, make that your working directory, and then type `ShinyHierarchy()`
-
+#' @details You can test with your own app, go to your shiny app, make that your
+#'  working directory, and then type `ShinyHierarchy()`
+#' @importFrom stringr str_extract_all
+#' @importFrom dplyr mutate bind_rows %>%
+#' @importFrom purrr map
+#' @importFrom tidyr unnest separate
+#' @importFrom stats setNames runif
+#' @importFrom utils View
+#' @importFrom visNetwork visNetwork visEdges visLegend visHierarchicalLayout
+#' @export
 ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
-  library(stringr)
-  library(readr)
-  library(tidyverse)
-  library(visNetwork)
 
   ## Get input again
   a <- read_file(paste(directory,"/",server,sep=""))
@@ -163,7 +178,7 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
     df <- map(df,as.character)
     df <- df %>% as.character()
     df <-  df %>% as.matrix %>% as.data.frame(stringsAsFactors=F)
-    df$V1 <- gsub('c\\(|character\\(0|\\"|\\)','',df$V1)
+    df[["V1"]] <- gsub('c\\(|character\\(0|\\"|\\)','', df[["V1"]])
     df
   }
 
