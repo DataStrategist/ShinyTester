@@ -4,8 +4,9 @@
 An R package to help debug Shiny apps during the process itself.
 
 ### To install:
-`devtools::install_github("mexindian/ShinyTester")` or simply `install.packages("ShinyTester")` 
+`install.packages("ShinyTester")` 
 
+(dev version `devtools::install_github("mexindian/ShinyTester")`)
 ### Motivation
 
 ** TL;WR VERSION:** Shiny is awesome but a bit daunting and easy to make mistakes in. These functions should help make it a bit less daunting.
