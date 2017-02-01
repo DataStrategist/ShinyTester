@@ -159,7 +159,7 @@ ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 #' @importFrom tidyr unnest separate
 #' @importFrom stats setNames runif
 #' @importFrom utils View
-#' @importFrom visNetwork visNetwork visEdges visLegend visHierarchicalLayout
+#' @importFrom visNetwork visNetwork visEdges visLegend visHierarchicalLayout visOptions
 #' @export
 ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
 
