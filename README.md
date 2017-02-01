@@ -29,19 +29,18 @@ ShinyTester::ShinyDummyCheck("https://raw.githubusercontent.com/mexindian/ShinyS
 
 Provides this table:
 
-|Item              |SrvCall         |isOutput |VisualCall         |Status          |
-|:-----------------|:---------------|:--------|:------------------|:---------------|
-|a                 |reactive        |NA       |NA                 |OK              |
-|FinalDF           |reactive        |NA       |NA                 |OK              |
-|Plot3             |renderPlotly    |Yes      |NA                 |Need call in UI |
-|PERC              |renderText      |Yes      |verbatimTextOutput |OK              |
-|fig1              |renderPlot      |Yes      |plotOutput         |OK              |
-|figControl        |renderPlot      |Yes      |plotOutput         |OK              |
-|figControl        |renderPlot      |Yes      |plotOutput         |OK              |
-|table1            |renderDataTable |Yes      |dataTableOutput    |OK              |
-|Plot3height=600px |NA              |NA       |plotlyOutput       |NA              |
+|Item       |SrvCall         |isOutput |VisualCall         |Status |
+|:----------|:---------------|:--------|:------------------|:------|
+|a          |reactive        |NA       |NA                 |OK     |
+|FinalDF    |reactive        |NA       |NA                 |OK     |
+|Plot3      |renderPlotly    |Yes      |plotlyOutput       |OK     |
+|PERC       |renderText      |Yes      |verbatimTextOutput |OK     |
+|fig1       |renderPlot      |Yes      |plotOutput         |OK     |
+|figControl |renderPlot      |Yes      |plotOutput         |OK     |
+|figControl |renderPlot      |Yes      |plotOutput         |OK     |
+|table1     |renderDataTable |Yes      |dataTableOutput    |OK     |
 
-Which shows that there are some errors in the Shiny app. The structure of the table is as follows:
+Which shows that there are no errors in the Shiny app. The structure of the table is as follows:
 - Item - The name of the asset that maybe should be on both server.R and ui.R
 - SrvCall - the TYPE of object that you're saying this specific item is (in server.R)
 - isOutput  - is a binary that will specify if in server.R you wrote just `item` or `output$item`
