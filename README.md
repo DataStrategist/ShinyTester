@@ -1,4 +1,5 @@
 [![Travis-CI Build Status](https://travis-ci.org/mexindian/ShinyTester.svg?branch=master)](https://travis-ci.org/mexindian/ShinyTester)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ShinyTester)](https://cran.r-project.org/package=ShinyTester)
 [![Downloads](https://cranlogs.r-pkg.org/badges/ShinyTester)](https://cran.r-project.org/package=ShinyTester) 
 # ShinyTester
 An R package to help debug Shiny apps during the process itself.
