@@ -140,6 +140,9 @@ ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
 #' @param offsetReactives a boolean that specifies if the middle row (the reactives) should show up in one row or whether there
 #' should be a small offset. TRUE by default.
+#' @param showInternalFunctions a boolean that specifies whether to show the functions internal to each node. These are shown
+#' on mouse_over in the hierarchy chart. FALSE by default.
+#' @param showCommentedOutChunks a boolean that specifies whether to show the chunks that have been commented out. FALSE by default.
 #'
 #'
 #' @return
@@ -153,15 +156,17 @@ ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 #'
 #' @details You can test with your own app, go to your shiny app, make that your
 #'  working directory, and then type `ShinyHierarchy()`
-#' @importFrom stringr str_extract_all
-#' @importFrom dplyr mutate bind_rows %>%
-#' @importFrom purrr map
+#' @importFrom readr read_lines
+#' @importFrom stringr str_extract_all str_extract str_trim
+#' @importFrom dplyr mutate bind_rows %>% group_by slice left_join select
+#' @importFrom purrr map map_chr
 #' @importFrom tidyr unnest separate
 #' @importFrom stats setNames runif
-#' @importFrom utils View
 #' @importFrom visNetwork visNetwork visEdges visLegend visHierarchicalLayout visOptions
 #' @export
-ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offsetReactives=T){
+ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R",
+                           offsetReactives=T,showInternalFunctions=F,
+                           showCommentedOutChunks=F){
 
   ## Get input again
   a <- read_file(paste(directory,"/",server,sep=""))
@@ -171,6 +176,38 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
                             simplify = F) %>% .[[1]]
   if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
                               you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
+
+  ## But need to remove out commented out blocks first, which isn't easy to do above... so:
+  ParsedChunks <- read_lines(paste(directory,"/",server,sep=""))
+
+  ## Find Chunk names
+  ParsedChunks <- grep("\\(\\{", ParsedChunks,value = T)
+  ParsedChunks <-  str_extract(ParsedChunks,"[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{")
+  ParsedChunks <- ParsedChunks[!is.na(ParsedChunks)]
+
+
+  ## clean text into a table that shows whether the chunk name and whether it's commented out or not.
+  ParsedChunks <- gsub("output\\$|<.+","",ParsedChunks)
+  ParsedChunksDF <- data.frame(Thingie=gsub("# *","",str_trim(ParsedChunks)),
+                               CommentedOut=grepl("#",ParsedChunks),
+                               stringsAsFactors = F)
+  ParsedChunksDF <- ParsedChunksDF %>% arrange(CommentedOut) %>%
+    group_by(Thingie) %>% slice(1)
+
+  ## OK... now remove commented out ones if the user has selected to do so...
+  ## in some cases, there are duplicates, and to that degree, we have to should keep the visible ones first
+
+
+  if(showCommentedOutChunks==F){
+    ChunkDF <- data.frame(Thingie=gsub(" .+","",Chunks),
+                          Chunks = Chunks,
+                          stringsAsFactors = F)
+    ParsedChunksDF <- left_join(ChunkDF,
+                                ParsedChunksDF,by="Thingie")
+    Chunks <- ParsedChunksDF %>% filter(CommentedOut==F) %>% select(Chunks) %>%
+      .$Chunks %>% as.character()
+  }
+
 
   ## Define function that looks for some text into the Chunks
   StringFinder <- function(stringToFind){
@@ -266,6 +303,34 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
   }
   nodes$level[grep("render",nodes$group)] <- 3
 
+  #### If showInternalFunctions is true, then add as a title the functions within each node ###########################################
+  ## str_extract_all(Chunks,"[a-zA-Z0-9\\._]+?(?=\\()(?!\\)|\\{)") This one should work but can't get it to respect the positive lookahead... so cheating
+
+  if(showInternalFunctions==T){
+    intFunc <- str_extract_all(Chunks,"[a-zA-Z0-9\\._]+?\\((?!\\)|\\{)")
+
+    ## make the function calls unique (this part may be changed or parametrized if ppl want the full list includin dups in the future)
+    intFunc <- map(intFunc,unique)
+    intFunc <- map_chr(.x = intFunc,.f =  paste,collapse="; ")
+
+    ## And remove the nasty parenthesis from above
+    intFunc <- gsub("\\(","",intFunc)
+
+    ## And make into a df w/ the chunk names and the func's, but let's call em title cause thats what they will need to be
+    IntFuncDF <- data.frame(Thingie = gsub(" ?<-.+","",Chunks),
+                            title = intFunc,stringsAsFactors = F)
+
+    ## But protect against duplicates
+    IntFuncDF <- IntFuncDF  %>%
+      group_by(Thingie) %>% slice(1)
+
+    ## Now push whatever is relevant to the nodes
+    nodes <- left_join(nodes,IntFuncDF,by="Thingie")
+    nodes$title <- paste(strwrap(nodes$title , width = 40,prefix = "<br>"),collapse="")
+    }
+
+
+
   ## Now edges
   edges <- data.frame(to=nodes$id[match(x = BofDF$ChunkName,table = nodes$Thingie)],
                       from=nodes$id[match(x = BofDF$Input,table = nodes$Thingie)])
@@ -275,4 +340,3 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R", offset
     visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
 
 }
-
