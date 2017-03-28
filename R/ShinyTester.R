@@ -340,3 +340,34 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R",
     visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
 
 }
+
+
+ProcessReactives <- function(directory=getwd(),ui="ui.R",server="server.R",
+                            showCommentedOutChunks=F){
+  
+  ## Get input again
+  a <- read_file(paste(directory,"/",server,sep=""))
+  b <- gsub("\r?\n","",a)
+  ## Identify code chunks, basically each little shiny minifunction
+  Chunks <- str_extract_all(b, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
+                            simplify = F) %>% .[[1]]
+  if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
+                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
+  
+  ## Identify only the reactive chunks
+  Chunks <- Chunks[grep("reactive\\(",Chunks)]
+  
+  ## get only the guts
+  Chunks2 <- str_extract(string = Chunks,"(?<=\\(\\{).+(?=\\}\\))")
+  
+  ## And make stuff evaluatable by replacing multiple space w/ semicolon, however, except the first one.
+  Chunks3 <- gsub("   +","; ",str_trim(Chunks2),perl=T)
+  
+  ## But deal w/ pipes
+  Chunks4 <- gsub("\\%;","\\%",Chunks3)
+  
+  for(i in 1:length(Chunks4)){
+      # eval(parse(text = Chunks4[i]))
+    eval(parse(text = str_split(Chunks4[i],";")[[1]]))
+  }
+}
