@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/github/mexindian/ShinyTester/badge.svg?branch=master)](https://coveralls.io/github/mexindian/ShinyTester?branch=master)
 [![Travis-CI Build Status](https://travis-ci.org/mexindian/ShinyTester.svg?branch=master)](https://travis-ci.org/mexindian/ShinyTester)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ShinyTester)](https://cran.r-project.org/package=ShinyTester)
 [![Downloads](https://cranlogs.r-pkg.org/badges/ShinyTester)](https://cran.r-project.org/package=ShinyTester) 
