@@ -1,15 +1,15 @@
 Package: ShinyTester
 Type: Package
 Title: Functions to Minimize Bonehead Moves While Working with 'shiny'
-Version: 0.1.5
-Author: Amit Kohli
+Version: 0.1.6
+Author: Amit Kohli, Joshua Kunst
 Maintainer: Amit Kohli <amit@amitkohli.com>
 BugReports:	https://github.com/mexindian/ShinyTester/issues
 Description: It's my experience that working with 'shiny' is intuitive once you're
     into it, but can be quite daunting at first. Several common mistakes are fairly
     predictable, and therefore we can control for these. The functions in this
-    package help match up the assets listed in the UI and the SERVER files, and
-    Visualize the ad hoc structure of the 'shiny' App.
+    package help match up the assets listed in the UI and the SERVER files, 
+    Visualize the ad hoc structure of the 'shiny' App, and run all the reactives.
 License: GPL-2
 URL: https://github.com/mexindian/ShinyTester
 Imports: 
@@ -18,7 +18,8 @@ Imports:
   readr,
   stringr,
   tidyr,
-  visNetwork
+  visNetwork,
+  networkD3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

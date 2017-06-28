@@ -143,7 +143,7 @@ ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 #' @param showInternalFunctions a boolean that specifies whether to show the functions internal to each node. These are shown
 #' on mouse_over in the hierarchy chart. FALSE by default.
 #' @param showCommentedOutChunks a boolean that specifies whether to show the chunks that have been commented out. FALSE by default.
-#'
+#' @param output a character string that specifies what kind of plot should be outputted: either "network" or "sankey" are accepted.
 #'
 #' @return
 #' It returns a very very nice network chart with BASICALLY three-ish ROWS of nodes.
@@ -163,10 +163,11 @@ ShinyDummyCheck <- function(directory = ".", ui = "ui.R", server = "server.R"){
 #' @importFrom tidyr unnest separate
 #' @importFrom stats setNames runif
 #' @importFrom visNetwork visNetwork visEdges visLegend visHierarchicalLayout visOptions
+#' @importFrom networkD3 sankeyNetwork
 #' @export
 ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R",
                            offsetReactives=T,showInternalFunctions=F,
-                           showCommentedOutChunks=F){
+                           showCommentedOutChunks=F,output="network"){
 
   ## Get input again
   a <- read_file(paste(directory,"/",server,sep=""))
@@ -335,39 +336,78 @@ ShinyHierarchy <- function(directory=getwd(),ui="ui.R",server="server.R",
   edges <- data.frame(to=nodes$id[match(x = BofDF$ChunkName,table = nodes$Thingie)],
                       from=nodes$id[match(x = BofDF$Input,table = nodes$Thingie)])
 
-  visNetwork(nodes,edges) %>% visEdges(arrows = 'to') %>%
+  ## Now output network or sankey
+  if(output=="network"){
+    visNetwork(nodes,edges) %>% visEdges(arrows = 'to') %>%
     visLegend() %>% visHierarchicalLayout()  %>%
     visOptions(highlightNearest = list(enabled = T, degree = 1, hover = T))
+  } else if (output=="sankey"){
+    ## make links unique
+    edges <- edges %>%
+      group_by(from,to) %>%
+      summarize(value=n())
+    ## zero indexing
+    edges$from <- edges$from-1
+    edges$to <- edges$to-1
 
-}
+    sankeyNetwork(Links=edges,Nodes = nodes,Source = 'from',NodeID = 'Thingie',
+                  Target = 'to', Value = 'value',NodeGroup = 'group',fontSize = 15)
 
-
-ProcessReactives <- function(directory=getwd(),ui="ui.R",server="server.R",
-                            showCommentedOutChunks=F){
-  
-  ## Get input again
-  a <- read_file(paste(directory,"/",server,sep=""))
-  b <- gsub("\r?\n","",a)
-  ## Identify code chunks, basically each little shiny minifunction
-  Chunks <- str_extract_all(b, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
-                            simplify = F) %>% .[[1]]
-  if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
-                              you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
-  
-  ## Identify only the reactive chunks
-  Chunks <- Chunks[grep("reactive\\(",Chunks)]
-  
-  ## get only the guts
-  Chunks2 <- str_extract(string = Chunks,"(?<=\\(\\{).+(?=\\}\\))")
-  
-  ## And make stuff evaluatable by replacing multiple space w/ semicolon, however, except the first one.
-  Chunks3 <- gsub("   +","; ",str_trim(Chunks2),perl=T)
-  
-  ## But deal w/ pipes
-  Chunks4 <- gsub("\\%;","\\%",Chunks3)
-  
-  for(i in 1:length(Chunks4)){
-      # eval(parse(text = Chunks4[i]))
-    eval(parse(text = str_split(Chunks4[i],";")[[1]]))
+  } else {
+    stop("Only 'network' or 'sankey' are accepted as outputs")
   }
 }
+
+
+#' #' ProcessReactives
+#' #'
+#' #' This function runs all the guts from reactive blocks in console (for local testing/debugging).
+#' #'
+#' #' For now, it only works where the server and ui files are seperate (ie, it doesn't work for `app.R` yet)
+#' #'
+#' #' @param directory the directory or website containing the files for the Shiny App. Defaults to current working directory
+#' #' @param ui a character vector size 1 containing the name of the UI files. defaults to "ui.R"
+#' #' @param server a character vector size 1 containing the names of the SERVER file. defaults to "server.R"
+#' #' @param inputs a 1 row dataframe containing values for all the inputs that would be required by the reactive scripts (so as to simulate a live version of the Shiny app)
+#' #'
+#' #' @return
+#' #' Returns nothing, but loads all items into memory
+#'
+#' #' @examples
+#' #' ProcessReactives(directory = system.file("example2", package = "ShinyTester"))
+#' #'
+#' #' @details You can test with your own app, go to your shiny app, make that your
+#' #'  working directory, and then type `ProcessReactives()`
+#' #' @importFrom stringr str_extract_all str_extract str_trim str_split
+#' #' @importFrom readr read_file
+#' #' @export
+#'
+#' ProcessReactives <- function(directory=getwd(),ui="ui.R",server="server.R",
+#'                             inputs=inputs){
+#'
+#'   ## Get input again
+#'   a <- read_file(paste(directory,"/",server,sep=""))
+#'   b <- gsub("\r?\n","",a)
+#'   ## Identify code chunks, basically each little shiny minifunction
+#'   Chunks <- str_extract_all(b, "[a-zA-Z0-9\\._]+ *\\<\\- *[a-zA-Z0-9\\._]+?\\(\\{.+?\\}\\)",
+#'                             simplify = F) %>% .[[1]]
+#'   if (length(Chunks)==0) stop("Hrm, I can't detect any chunks. I expect assignments to use '<-'... so if
+#'                               you're using '=' or '->' assignments or 'source'ing stuff in, then that would be why.")
+#'
+#'   ## Identify only the reactive chunks
+#'   Chunks <- Chunks[grep("reactive\\(",Chunks)]
+#'
+#'   ## get only the guts
+#'   Chunks2 <- str_extract(string = Chunks,"(?<=\\(\\{).+(?=\\}\\))")
+#'
+#'   ## And make stuff evaluatable by replacing multiple space w/ semicolon, however, except the first one.
+#'   Chunks3 <- gsub("   +","; ",str_trim(Chunks2),perl=T)
+#'
+#'   ## But deal w/ pipes
+#'   Chunks4 <- gsub("\\%;","\\%",Chunks3)
+#'
+#'   for(i in 1:length(Chunks4)){
+#'       # eval(parse(text = Chunks4[i]))
+#'     eval(parse(text = str_split(Chunks4[i],";")[[1]]))
+#'   }
+#' }

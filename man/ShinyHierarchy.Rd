@@ -6,7 +6,7 @@
 \usage{
 ShinyHierarchy(directory = getwd(), ui = "ui.R", server = "server.R",
   offsetReactives = T, showInternalFunctions = F,
-  showCommentedOutChunks = F)
+  showCommentedOutChunks = F, output = "network")
 }
 \arguments{
 \item{directory}{the directory or website containing the files for the Shiny App. Defaults to current working directory}
@@ -22,6 +22,8 @@ should be a small offset. TRUE by default.}
 on mouse_over in the hierarchy chart. FALSE by default.}
 
 \item{showCommentedOutChunks}{a boolean that specifies whether to show the chunks that have been commented out. FALSE by default.}
+
+\item{output}{a character string that specifies what kind of plot should be outputted: either "network" or "sankey" are accepted.}
 }
 \value{
 It returns a very very nice network chart with BASICALLY three-ish ROWS of nodes.
