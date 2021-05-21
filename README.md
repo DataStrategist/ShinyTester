@@ -3,8 +3,6 @@
 [![Travis-CI Build Status](https://travis-ci.org/DataStrategist/ShinyTester.svg?branch=master)](https://travis-ci.org/DataStrategist/ShinyTester)
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ShinyTester)](https://cran.r-project.org/package=ShinyTester)
 [![Downloads](https://cranlogs.r-pkg.org/badges/ShinyTester)](https://cran.r-project.org/package=ShinyTester) 
-[![saythanks](https://img.shields.io/badge/say-thanks-ff69b4.svg)](https://saythanks.io/to/DataStrategist)
-
 
 # ShinyTester
 An R package to help debug Shiny apps during the process itself.
